@@ -51,6 +51,15 @@ from agent_eval.core.metric_schema import (
 )
 from agent_eval.core.metric_schema import is_managed_entry, managed_base_name
 
+# Task 2: Gotcha - Monkey-patch urllib3 to avoid PyOpenSSL connection crashes across threads
+try:
+    import urllib3.contrib.pyopenssl
+
+    urllib3.contrib.pyopenssl.extract_from_urllib3()
+except ImportError:
+    pass
+
+
 # Setup Logger — root logger at CRITICAL silences all third-party noise by default.
 # Our own logger (agent_eval) is explicitly set to INFO so our messages show.
 # Use --debug to open the floodgates (root → DEBUG, everything visible).
@@ -976,6 +985,8 @@ class Evaluator:
         interaction_files: list[Path] | Path | None = None,
         interaction_file: Path | None = None,
     ):
+        agents_map = None
+
         # Backward compat: accept singular interaction_file
         if interaction_files is None and interaction_file is not None:
             interaction_files = [interaction_file]
@@ -1266,6 +1277,7 @@ class Evaluator:
                             metric_name,
                             CONFIG.METRIC_TOOL_USE_QUALITY,
                             is_managed_metric=True,
+                            agents_map=agents_map,
                         )
                         logger.info(
                             f"Using standard column mapping for GCS metric: {metric_name}"
@@ -1278,6 +1290,7 @@ class Evaluator:
                         metric_name,
                         CONFIG.METRIC_TOOL_USE_QUALITY,
                         is_managed_metric=False,
+                        agents_map=agents_map,
                     )
 
                 if eval_dataset.empty or len(eval_dataset.columns) == 0:

@@ -264,13 +264,34 @@ def get_nested_value(row_val: Any, path: str) -> Any:
     return curr
 
 
+def _map_agents(eval_dataset: pd.DataFrame, default_path: str | None = None) -> None:
+    """Contract C1: Extract agents_map and dynamically inject."""
+    try:
+        import json
+        from pathlib import Path
+
+        if default_path is None:
+            config_path = Path(".eval_agent_config.json")
+        else:
+            config_path = Path(default_path)
+
+        if config_path.exists():
+            cfg = json.loads(config_path.read_text())
+            agents_map = cfg.get("agents_map")
+            if agents_map:
+                eval_dataset["agents"] = [agents_map] * len(eval_dataset)
+    except Exception:
+        pass
+
+
 def map_dataset_columns(
     agent_df: pd.DataFrame,
     original_df: pd.DataFrame,
-    mapping: dict[str, Any],
+    mapping: dict,
     metric_name: str,
     metric_tool_use_name: str = "TOOL_USE_QUALITY",
     is_managed_metric: bool = False,
+    agents_map: dict | None = None,
 ) -> pd.DataFrame:
     """
     Maps columns from the raw agent DataFrame to the evaluation dataset based on the metric config.
@@ -300,6 +321,9 @@ def map_dataset_columns(
         elif isinstance(x, dict):
             return json.dumps(x)
         return str(x) if x is not None else ""
+
+    # Contract C1: Inject agents map into the dataset for multi-agent Vertex AutoRating
+    _map_agents(eval_dataset)
 
     # Add default prompt/response for ALL LLM metrics
     # The SDK expects these standard columns to be present
