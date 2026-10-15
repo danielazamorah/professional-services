@@ -348,7 +348,7 @@ The command stops at three prompts. Answer them like this:
 2. **Analysis Focus:** press **Enter** to skip.
 3. **Start a localhost server now...?:** type `n` and press **Enter**. You open the report in Step 7.
 
-The run takes about 3 minutes. The simulator plays the five conversations in parallel, the judges run on Vertex AI,
+The run takes 3 to 6 minutes. The simulator plays the five conversations in parallel, the judges run on Vertex AI,
 and Gemini writes the analysis.
 
 **✅ Check your work.** At the end of the Grade phase, the **LLM-as-Judge Metrics** table shows the average score of
@@ -356,7 +356,7 @@ each metric. Your numbers can be a little different, because the customers and t
 
 | Metric | Score | Threshold | Result |
 |---|---|---|---|
-| `general_quality` | 0.8 | 0.7 | ✅ Pass |
+| `general_quality` | 0.8 to 0.9 | 0.7 | ✅ Pass |
 | `refund_policy_compliance` | 0.4 | 1.0 | ❌ Fail |
 
 The two metrics disagree, and that is the point:
@@ -519,7 +519,7 @@ agent-eval compare tests/eval/results/v2-refund-policy tests/eval/results/baseli
 ```
 
 The table shows the baseline score, the new score, the difference, and a status for each metric. The judge rows from
-two of our runs:
+three of our runs:
 
 | Run | Metric | Baseline | New | Delta | Status |
 |---|---|---|---|---|---|
@@ -527,8 +527,10 @@ two of our runs:
 | 1 | `refund_policy_compliance` | 0.40 | 1.00 | +0.60 | ▲ Improved |
 | 2 | `general_quality` | 0.80 | 0.80 | 0.00 | Unchanged |
 | 2 | `refund_policy_compliance` | 0.40 | 1.00 | +0.60 | ▲ Improved |
+| 3 | `general_quality` | 0.87 | 0.77 | -0.10 | ▼ Regressed |
+| 3 | `refund_policy_compliance` | 0.40 | 1.00 | +0.60 | ▲ Improved |
 
-Both runs confirm the hypothesis. But look at `general_quality` in run 1: **Regressed**. `compare` flags any drop
+All three runs confirm the hypothesis. But look at `general_quality` in runs 1 and 3: **Regressed**. `compare` flags any drop
 larger than 0.001, with no margin for noise. With only five conversations, one reply that scores 0.5 lower moves the
 average by 0.1. In run 1, the drop came from one correct reply that `general_quality` misjudged: in a multi-turn
 conversation, this metric sees only the customer's last message. The refund judge sees every message and every tool

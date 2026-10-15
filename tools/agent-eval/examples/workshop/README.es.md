@@ -353,7 +353,7 @@ El comando se detiene en tres preguntas. Respóndelas así:
 2. **Analysis Focus:** presiona **Enter** para saltarla.
 3. **Start a localhost server now...?:** escribe `n` y presiona **Enter**. El reporte lo abres en el Paso 7.
 
-La corrida toma unos 3 minutos. El simulador juega las cinco conversaciones en paralelo, los jueces corren en Vertex AI
+La corrida toma de 3 a 6 minutos. El simulador juega las cinco conversaciones en paralelo, los jueces corren en Vertex AI
 y Gemini escribe el análisis.
 
 **✅ Verifica tu trabajo.** Al final de la fase Grade, la tabla **LLM-as-Judge Metrics** muestra el promedio de cada
@@ -361,7 +361,7 @@ métrica. Tus números pueden variar un poco, porque los clientes y los jueces s
 
 | Métrica | Calificación | Umbral | Resultado |
 |---|---|---|---|
-| `general_quality` | 0.8 | 0.7 | ✅ Pasa |
+| `general_quality` | 0.8 a 0.9 | 0.7 | ✅ Pasa |
 | `refund_policy_compliance` | 0.4 | 1.0 | ❌ Falla |
 
 Las dos métricas no coinciden, y ese es el punto:
@@ -529,7 +529,7 @@ agent-eval compare tests/eval/results/v2-refund-policy tests/eval/results/baseli
 ```
 
 La tabla muestra la calificación del baseline, la nueva, la diferencia y un estado para cada métrica. Las filas de los
-jueces en dos de nuestras corridas:
+jueces en tres de nuestras corridas:
 
 | Corrida | Métrica | Baseline | Nueva | Delta | Estado |
 |---|---|---|---|---|---|
@@ -537,8 +537,10 @@ jueces en dos de nuestras corridas:
 | 1 | `refund_policy_compliance` | 0.40 | 1.00 | +0.60 | ▲ Improved |
 | 2 | `general_quality` | 0.80 | 0.80 | 0.00 | Unchanged |
 | 2 | `refund_policy_compliance` | 0.40 | 1.00 | +0.60 | ▲ Improved |
+| 3 | `general_quality` | 0.87 | 0.77 | -0.10 | ▼ Regressed |
+| 3 | `refund_policy_compliance` | 0.40 | 1.00 | +0.60 | ▲ Improved |
 
-Las dos corridas confirman la hipótesis. Pero mira `general_quality` en la corrida 1: **Regressed**. `compare` marca
+Las tres corridas confirman la hipótesis. Pero mira `general_quality` en las corridas 1 y 3: **Regressed**. `compare` marca
 cualquier baja mayor a 0.001, sin margen para el ruido. Con solo cinco conversaciones, una respuesta que saca 0.5 menos
 mueve el promedio 0.1. En la corrida 1, la baja vino de una respuesta correcta que `general_quality` calificó mal: en una
 conversación multi-turn, esta métrica solo ve el último mensaje del cliente. El juez de reembolsos ve cada mensaje y

@@ -31,7 +31,7 @@ Notes for running this repository as a live, hands-on workshop (about 60 minutes
 | 0:00 to 0:10 | Why evaluate agents. What agent-eval is. The bug: "friendly, fast, and gives away refunds". | (slides) |
 | 0:10 to 0:25 | Setup. This is where most problems happen: walk the room. | Steps 1 to 3 |
 | 0:25 to 0:30 | The agent, the five conversations, and the two metrics | Steps 4 and 5 |
-| 0:30 to 0:38 | Baseline run. While it runs (about 3 minutes), explain the custom judge. | Step 6 |
+| 0:30 to 0:38 | Baseline run. While it runs (3 to 6 minutes), explain the custom judge. | Step 6 |
 | 0:38 to 0:45 | The report: "everything is green, except what matters". Root cause. | Steps 7 and 8 |
 | 0:45 to 0:55 | The fix (one prompt change), second run, comparison, run history | Steps 9 and 10 |
 | 0:55 to 1:00 | Lessons and challenges | Challenges |
@@ -40,10 +40,11 @@ Notes for running this repository as a live, hands-on workshop (about 60 minutes
 
 | Run | `general_quality` | `refund_policy_compliance` |
 |---|---|---|
-| Baseline | about 0.8, passes (threshold 0.7) | 0.4, fails (threshold 1.0): only `order_status` and `unknown_order` pass |
+| Baseline | 0.8 to 0.9, passes (threshold 0.7) | 0.4, fails (threshold 1.0): only `order_status` and `unknown_order` pass |
 | After the fix | about 0.8, passes | 1.0, passes: 5 of 5 |
 
-- One run takes about 3 minutes. The whole workshop costs well under US$1 per attendee.
+- One run takes 3 to 6 minutes (on 2026-10-15: 3.6 minutes for the baseline, 6 minutes for the second run). The whole
+  workshop costs well under US$1 per attendee.
 - `compare` can mark `general_quality` as **Regressed** even when the agent is better. With five conversations, one
   misjudged reply moves the average by 0.1. This is a good teaching moment: read the conversation before you act.
 - Tokens, cost, and latency move in both directions between identical runs. Do not present them as wins.
