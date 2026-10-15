@@ -36,6 +36,7 @@ score. But the agent gives refunds that the store policy does not allow. You wil
   - [Step 9. Fix the agent](#step-9-fix-the-agent)
   - [Step 10. Run again and compare](#step-10-run-again-and-compare)
 - [Challenges](#challenges)
+- [Use a coding agent (optional)](#use-a-coding-agent-optional)
 - [Troubleshooting](#troubleshooting)
 - [Clean up](#clean-up)
 - [Learn more](#learn-more)
@@ -89,6 +90,8 @@ tools/agent-eval/examples/workshop/
 ├── docs/
 │   ├── img/                      Screenshots of the report
 │   └── INSTRUCTOR.md             Notes for workshop instructors
+├── AGENTS.md                     Context for coding agents (CLAUDE.md points to it)
+├── .agents/skills/eval-loop/     A coding agent skill for one improvement iteration
 ├── .env.example                  Template for your project settings
 ├── pyproject.toml                The agent package and its dependencies (ADK + agent-eval)
 └── requirements.txt              Exact versions that the workshop was tested with
@@ -583,6 +586,42 @@ Run the evaluation after each change, with a new `--run-id`.
    Agents built with other frameworks (LangGraph, CrewAI, and others) can bring their traces with `agent-eval convert`.
 
 **Tip:** to run without prompts (for example, in a script), set `AGENT_EVAL_NO_PAUSES=1` before `agent-eval run`.
+
+---
+
+## Use a coding agent (optional)
+
+This folder includes context for coding agents, so an agent can run the evaluation loop with you:
+
+- `AGENTS.md`: what the folder is, the store policy, the commands, and the rules. For example: ask before each run,
+  commit before each run, and do not change the judge to make it pass. Antigravity and many other agents read it
+  automatically. `CLAUDE.md` points Claude Code to it.
+- `.agents/skills/eval-loop/SKILL.md`: a skill with the steps of one improvement iteration: run, read the results,
+  write a hypothesis, make one change, run again, and compare.
+
+To use the Antigravity CLI, check that it is installed:
+
+```bash
+agy --version
+```
+
+If the command is not found, install it with the official instructions at
+<https://antigravity.google/docs/cli/install>. Then start it in this folder, so that it loads `AGENTS.md`:
+
+```bash
+cd ~/professional-services/tools/agent-eval/examples/workshop
+source .venv/bin/activate
+agy
+```
+
+On the first launch, sign in with your Google account and trust the folder. Type `/skills` to check that `eval-loop`
+is loaded. Then try these prompts:
+
+1. `Run a baseline evaluation and explain which conversations fail the refund policy, and why.`
+2. `Propose one change to fix it. Write the hypothesis, commit the change, run again as v2, and compare the two runs.`
+
+Each evaluation run calls Vertex AI in your project, so the agent asks before it starts one. The Antigravity CLI
+updates itself in the background.
 
 ---
 

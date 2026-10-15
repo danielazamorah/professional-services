@@ -36,6 +36,7 @@ calificación aprobatoria. Pero el agente da reembolsos que la política de la t
   - [Paso 9. Arregla el agente](#paso-9-arregla-el-agente)
   - [Paso 10. Vuelve a correr y compara](#paso-10-vuelve-a-correr-y-compara)
 - [Retos](#retos)
+- [Usa un agente de código (opcional)](#usa-un-agente-de-código-opcional)
 - [Solución de problemas](#solución-de-problemas)
 - [Limpieza](#limpieza)
 - [Para aprender más](#para-aprender-más)
@@ -89,6 +90,8 @@ tools/agent-eval/examples/workshop/
 ├── docs/
 │   ├── img/                      Capturas del reporte
 │   └── INSTRUCTOR.md             Notas para quien imparte el taller
+├── AGENTS.md                     Contexto para agentes de código (CLAUDE.md apunta a él)
+├── .agents/skills/eval-loop/     Un skill para agentes de código: una iteración de mejora
 ├── .env.example                  Plantilla para la configuración de tu proyecto
 ├── pyproject.toml                El paquete del agente y sus dependencias (ADK + agent-eval)
 └── requirements.txt              Las versiones exactas con las que se probó el taller
@@ -594,6 +597,42 @@ Corre la evaluación después de cada cambio, con un `--run-id` nuevo.
    `agent-eval convert`.
 
 **Tip:** para correr sin preguntas (por ejemplo, en un script), define `AGENT_EVAL_NO_PAUSES=1` antes de `agent-eval run`.
+
+---
+
+## Usa un agente de código (opcional)
+
+Esta carpeta trae contexto para agentes de código, para que un agente corra el ciclo de evaluación contigo:
+
+- `AGENTS.md`: qué es la carpeta, la política de la tienda, los comandos y las reglas. Por ejemplo: preguntar antes de
+  cada corrida, hacer commit antes de cada corrida y no cambiar el juez para que pase. Antigravity y muchos otros
+  agentes lo leen solos. `CLAUDE.md` le indica a Claude Code que lo lea.
+- `.agents/skills/eval-loop/SKILL.md`: un skill con los pasos de una iteración de mejora: correr, leer los resultados,
+  escribir una hipótesis, hacer un cambio, volver a correr y comparar.
+
+Para usar la CLI de Antigravity, revisa que esté instalada:
+
+```bash
+agy --version
+```
+
+Si el comando no existe, instálala con las instrucciones oficiales en <https://antigravity.google/docs/cli/install>.
+Después ábrela en esta carpeta, para que cargue `AGENTS.md`:
+
+```bash
+cd ~/professional-services/tools/agent-eval/examples/workshop
+source .venv/bin/activate
+agy
+```
+
+La primera vez, inicia sesión con tu cuenta de Google y marca la carpeta como confiable. Escribe `/skills` para
+revisar que `eval-loop` está cargado. Después prueba estos prompts:
+
+1. `Run a baseline evaluation and explain which conversations fail the refund policy, and why.`
+2. `Propose one change to fix it. Write the hypothesis, commit the change, run again as v2, and compare the two runs.`
+
+Cada corrida de evaluación llama a Vertex AI en tu proyecto, así que el agente pregunta antes de empezar una. La CLI de
+Antigravity se actualiza sola en segundo plano.
 
 ---
 

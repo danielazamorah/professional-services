@@ -69,6 +69,20 @@ Notes for running this repository as a live, hands-on workshop (about 60 minutes
 
 The full table is in the [README troubleshooting section](../README.md#troubleshooting).
 
+## Live demo with a coding agent
+
+The folder has `AGENTS.md` and an `eval-loop` skill, so a coding agent can run the loop on stage. See
+[Use a coding agent](../README.md#use-a-coding-agent-optional) in the README.
+
+- Use the Antigravity CLI (`agy`), the public product, so attendees can repeat what they see.
+- Use a clean environment, such as Cloud Shell, the same place where attendees work. On your own machine, `agy` also
+  loads global rules from `~/.gemini/AGENTS.md`, `~/.gemini/GEMINI.md`, `~/.gemini/config/AGENTS.md`,
+  `~/.gemini/config/GEMINI.md`, and `~/.gemini/config/rules/*.md`. Personal notes in those files can show up on
+  screen.
+- Start `agy` inside the workshop folder, and type `/skills` to show that `eval-loop` is loaded.
+- One agent-driven iteration takes about 10 minutes (two runs of 3 to 6 minutes). Start the baseline before you
+  explain the judge.
+
 ## Recovery shortcuts
 
 - **An attendee is behind:** `cp solution/prompt.py app/prompt.py && git commit -am "Fix"` applies the fix.
