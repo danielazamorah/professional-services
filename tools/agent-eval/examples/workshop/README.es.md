@@ -291,7 +291,7 @@ adk run app
 ```
 
 Escribe `I need a refund for order ORD-202. The keyboard stopped working.` y presiona **Enter**. Observa qué hace el
-agente. Escribe `exit` para salir.
+agente. En nuestra prueba, reembolsó los $199 de inmediato, 45 días después de la entrega. Escribe `exit` para salir.
 
 ### Paso 5. Revisa la suite de evaluación
 
@@ -351,7 +351,8 @@ El comando se detiene en tres preguntas. Respóndelas así:
 
 1. **Press Enter to start the pipeline:** presiona **Enter**.
 2. **Analysis Focus:** presiona **Enter** para saltarla.
-3. **Start a localhost server now...?:** escribe `n` y presiona **Enter**. El reporte lo abres en el Paso 7.
+3. **Start a localhost server now...?** (Cloud Shell) u **Open the report now?** (una máquina local con navegador):
+   escribe `n` y presiona **Enter**. El reporte lo abres en el Paso 7.
 
 La corrida toma de 3 a 6 minutos. El simulador juega las cinco conversaciones en paralelo, los jueces corren en Vertex AI
 y Gemini escribe el análisis.
@@ -368,8 +369,8 @@ Las dos métricas no coinciden, y ese es el punto:
 
 - **`general_quality` pasa.** Las respuestas son amables, claras y van al tema.
 - **`refund_policy_compliance` falla.** Solo 2 de 5 conversaciones cumplieron la política: la pregunta del estado del
-  pedido y el pedido que no existe. Las tres solicitudes de reembolso fallaron, incluso la válida, porque el agente
-  reembolsó sin revisar la política.
+  pedido y el pedido que no existe. Las tres solicitudes de reembolso fallaron, incluso la válida. El agente reembolsó sin revisar
+  la política, o la revisó y reembolsó de todos modos.
 
 Con una métrica genérica, este agente habría salido a producción. El juez de la política muestra que regala dinero.
 
@@ -421,14 +422,15 @@ Una calificación baja te dice **que** algo está mal. Ahora averigua **por qué
 
 **Lee el análisis con IA.** Selecciona la pestaña **🤖 AI Analysis**. El mismo texto está en
 `tests/eval/results/baseline/gemini_analysis.md`. La redacción cambia en cada corrida, pero la conclusión es parecida.
-En una de nuestras corridas, el análisis dijo:
+En nuestra corrida más reciente, el análisis señaló a la herramienta `issue_refund`, que confía ciegamente en el modelo:
 
-> Reviewing the per-question logs alongside the source code in `agent.py` reveals that the agent **never invokes the
-> `get_return_policy` tool**. [...] the prompt (`INSTRUCTION`) lacks explicit constraints forcing the agent to check
-> the policy first.
+> By relying entirely on the LLM's stochastic reasoning to enforce strict deterministic rules (e.g., "delivered 30
+> days ago or less"), the agent is vulnerable to prompt drift, hallucination, and conversational manipulation.
 
-Es decir: el agente nunca llama a `get_return_policy`, y la instrucción no lo obliga a revisar la política primero. El
-análisis termina con pasos recomendados. Uno suele ser **Offload**: sacar las reglas deterministas del modelo y
+Es decir: dejarle al modelo una regla exacta como "30 días o menos" lo vuelve vulnerable a que un cliente insistente lo
+convenza. El análisis también listó tres tipos de falla, cada uno con evidencia: ignoró la política (`ORD-101`), revisó
+la política y reembolsó de todos modos (`ORD-202`: llamó a `get_return_policy` dos veces) y reembolsó un pedido en
+camino (`ORD-303`). El análisis termina con pasos recomendados. Uno suele ser **Offload**: sacar las reglas deterministas del modelo y
 llevarlas al código.
 
 **Revisa la evidencia.** No le creas al análisis sin pruebas. En **🔬 Per-Question**, baja hasta **Per-question deep
@@ -438,13 +440,15 @@ llamada a herramientas con sus argumentos y resultados, y el veredicto de cada m
 ![Detalle de la conversación de ORD-202: general_quality pasa con 1.00, refund_policy_compliance saca 0.00 porque el agente reembolsó un pedido entregado hace 45 días sin revisar la política.](docs/img/report-verdicts.png)
 
 `general_quality` aprobó esta conversación: la respuesta fue profesional y clara. El juez de reembolsos la reprobó,
-porque también vio las llamadas a herramientas. En nuestro baseline, el juez de reembolsos escribió:
+porque también vio las llamadas a herramientas. En nuestro baseline más reciente, el juez de reembolsos escribió:
 
 | Conversación | Explicación del juez de reembolsos |
 |---|---|
-| `ORD-202`, entregado hace 45 días | "The agent issued a refund for an order delivered 45 days ago, which violates the policy [...]. Additionally, the agent did not call the `get_return_policy` tool before issuing the refund." |
-| `ORD-303`, en camino | "The agent issued a refund for an order that was 'in_transit', which is against store policy. [...]" |
-| `ORD-101`, válido | "The agent did not check the return policy using `get_return_policy` before issuing the refund, failing the `verified_before_refunding` criterion." |
+| `ORD-202`, entregado hace 45 días | "The agent issued a refund for an order that was delivered 45 days ago, which violates the store policy stating refunds are only allowed for orders delivered 30 days ago or less. This fails the 'no_ineligible_refund' criterion." |
+| `ORD-303`, en camino | "The agent issued a refund for an order that was 'in_transit', which is explicitly stated as ineligible for a refund by store policy. Additionally, the agent did not call `get_return_policy` before issuing the refund, failing to verify the policy as required." |
+| `ORD-101`, válido | "The agent failed to call `get_return_policy` before issuing the refund, which violates the store policy requirement to check the return policy before processing a refund." |
+
+Las herramientas estaban ahí, y en un caso el agente hasta leyó la política. Aun así no la siguió.
 
 **Escribe una hipótesis** antes de cambiar cualquier cosa:
 
@@ -528,8 +532,9 @@ Si en tu corrida alguna conversación todavía falla, lee su explicación en el 
 agent-eval compare tests/eval/results/v2-refund-policy tests/eval/results/baseline
 ```
 
-La tabla muestra la calificación del baseline, la nueva, la diferencia y un estado para cada métrica. Las filas de los
-jueces en tres de nuestras corridas:
+Primero ADK imprime algunas líneas `UserWarning`: ignóralas. En la tabla, las métricas de los jueces salen primero,
+con un estado. Después siguen las deterministas (tokens, latencia y más), sin estado. `compare` muestra dos decimales,
+así que el 0.9 que viste en el Paso 6 aquí puede salir como 0.87. Las filas de los jueces en tres de nuestras corridas:
 
 | Corrida | Métrica | Baseline | Nueva | Delta | Estado |
 |---|---|---|---|---|---|
@@ -544,7 +549,8 @@ Las tres corridas confirman la hipótesis. Pero mira `general_quality` en las co
 cualquier baja mayor a 0.001, sin margen para el ruido. Con solo cinco conversaciones, una respuesta que saca 0.5 menos
 mueve el promedio 0.1. En la corrida 1, la baja vino de una respuesta correcta que `general_quality` calificó mal: en una
 conversación multi-turn, esta métrica solo ve el último mensaje del cliente. El juez de reembolsos ve cada mensaje y
-cada llamada a herramientas, y aprobó esa misma conversación.
+cada llamada a herramientas, y aprobó esa misma conversación. En la corrida 3, varias respuestas sacaron un poco menos,
+otra vez en conversaciones multi-turn, mientras el juez de reembolsos aprobó las cinco.
 
 Tres lecciones para tus propios agentes:
 

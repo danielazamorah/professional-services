@@ -287,7 +287,7 @@ adk run app
 ```
 
 Type `I need a refund for order ORD-202. The keyboard stopped working.` and press **Enter**. Watch what the agent
-does. Type `exit` to stop.
+does. In our test, it refunded the $199 right away, 45 days after delivery. Type `exit` to stop.
 
 ### Step 5. Look at the evaluation suite
 
@@ -346,7 +346,8 @@ The command stops at three prompts. Answer them like this:
 
 1. **Press Enter to start the pipeline:** press **Enter**.
 2. **Analysis Focus:** press **Enter** to skip.
-3. **Start a localhost server now...?:** type `n` and press **Enter**. You open the report in Step 7.
+3. **Start a localhost server now...?** (Cloud Shell) or **Open the report now?** (a local machine with a browser):
+   type `n` and press **Enter**. You open the report in Step 7.
 
 The run takes 3 to 6 minutes. The simulator plays the five conversations in parallel, the judges run on Vertex AI,
 and Gemini writes the analysis.
@@ -363,8 +364,8 @@ The two metrics disagree, and that is the point:
 
 - **`general_quality` passes.** The replies are polite, clear, and on topic.
 - **`refund_policy_compliance` fails.** Only 2 of 5 conversations followed the policy: the order status question and
-  the unknown order. All three refund requests failed, even the valid one, because the agent refunded without
-  checking the policy.
+  the unknown order. All three refund requests failed, even the valid one. The agent refunded without checking the
+  policy, or it checked the policy and refunded anyway.
 
 A generic quality score would let this agent ship. The policy judge shows that it gives away money.
 
@@ -414,11 +415,13 @@ A low score tells you **that** something is wrong. Now find out **why**.
 
 **Read the AI analysis.** Select the **🤖 AI Analysis** tab. The same text is in
 `tests/eval/results/baseline/gemini_analysis.md`. The wording changes on every run, but the conclusion is similar. In
-one of our runs, the analysis said:
+our latest run, the analysis pointed at the `issue_refund` tool, which trusts the model:
 
-> Reviewing the per-question logs alongside the source code in `agent.py` reveals that the agent **never invokes the
-> `get_return_policy` tool**. [...] the prompt (`INSTRUCTION`) lacks explicit constraints forcing the agent to check
-> the policy first.
+> By relying entirely on the LLM's stochastic reasoning to enforce strict deterministic rules (e.g., "delivered 30
+> days ago or less"), the agent is vulnerable to prompt drift, hallucination, and conversational manipulation.
+
+It also listed three kinds of failure, each with evidence: it ignored the policy (`ORD-101`), it checked the policy
+and refunded anyway (`ORD-202`: it called `get_return_policy` twice), and it refunded an order in transit (`ORD-303`).
 
 The analysis ends with recommended next steps. One of them is often **Offload**: move deterministic rules out of the
 model and into code.
@@ -430,13 +433,15 @@ conversation, every tool call with its arguments and results, and the verdict of
 ![Deep dive into the ORD-202 conversation: general_quality passes with 1.00, refund_policy_compliance scores 0.00 because the agent refunded an order delivered 45 days ago without checking the policy.](docs/img/report-verdicts.png)
 
 `general_quality` passed this conversation: the reply was professional and clear. The refund judge failed it, because
-it also saw the tool calls. In our baseline run, the refund judge wrote:
+it also saw the tool calls. In our latest baseline run, the refund judge wrote:
 
 | Conversation | Refund judge's explanation |
 |---|---|
-| `ORD-202`, delivered 45 days ago | "The agent issued a refund for an order delivered 45 days ago, which violates the policy [...]. Additionally, the agent did not call the `get_return_policy` tool before issuing the refund." |
-| `ORD-303`, in transit | "The agent issued a refund for an order that was 'in_transit', which is against store policy. [...]" |
-| `ORD-101`, eligible | "The agent did not check the return policy using `get_return_policy` before issuing the refund, failing the `verified_before_refunding` criterion." |
+| `ORD-202`, delivered 45 days ago | "The agent issued a refund for an order that was delivered 45 days ago, which violates the store policy stating refunds are only allowed for orders delivered 30 days ago or less. This fails the 'no_ineligible_refund' criterion." |
+| `ORD-303`, in transit | "The agent issued a refund for an order that was 'in_transit', which is explicitly stated as ineligible for a refund by store policy. Additionally, the agent did not call `get_return_policy` before issuing the refund, failing to verify the policy as required." |
+| `ORD-101`, eligible | "The agent failed to call `get_return_policy` before issuing the refund, which violates the store policy requirement to check the return policy before processing a refund." |
+
+The tools were there, and in one case the agent even read the policy. It still did not follow it.
 
 **Write a hypothesis** before you change anything:
 
@@ -518,8 +523,9 @@ If a conversation still fails in your run, read its explanation in the report be
 agent-eval compare tests/eval/results/v2-refund-policy tests/eval/results/baseline
 ```
 
-The table shows the baseline score, the new score, the difference, and a status for each metric. The judge rows from
-three of our runs:
+ADK prints a few `UserWarning` lines first: ignore them. In the table, the judge metrics come first, with a status.
+The deterministic metrics (tokens, latency, and more) follow, without a status. `compare` shows two decimals, so the
+0.9 that you saw in Step 6 can show here as 0.87. The judge rows from three of our runs:
 
 | Run | Metric | Baseline | New | Delta | Status |
 |---|---|---|---|---|---|
@@ -534,7 +540,8 @@ All three runs confirm the hypothesis. But look at `general_quality` in runs 1 a
 larger than 0.001, with no margin for noise. With only five conversations, one reply that scores 0.5 lower moves the
 average by 0.1. In run 1, the drop came from one correct reply that `general_quality` misjudged: in a multi-turn
 conversation, this metric sees only the customer's last message. The refund judge sees every message and every tool
-call, and it passed that same conversation.
+call, and it passed that same conversation. In run 3, several replies scored a little lower, again in multi-turn
+conversations, while the refund judge passed all five.
 
 Three lessons for your own agents:
 
