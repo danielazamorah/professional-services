@@ -47,13 +47,14 @@ calificación aprobatoria. Pero el agente da reembolsos que la política de la t
 Un solo comando, `agent-eval run`, corre cuatro fases. Después cambias una cosa y vuelves a correrlo.
 
 ```mermaid
-flowchart LR
+flowchart TB
     D["dataset.jsonl<br/>5 conversaciones de prueba"] --> G
     M["metric_definitions.json<br/>qué medir"] --> GR
     subgraph RUN["agent-eval run"]
-        G["1. Generate<br/>un cliente simulado habla con tu agente"] --> GR["2. Grade<br/>métricas de los traces + jueces LLM"]
-        GR --> A["3. Analyze<br/>Gemini encuentra la causa raíz"]
-        A --> R["4. Report<br/>reporte HTML + historial"]
+        direction LR
+        G["1. Generate<br/>un cliente simulado<br/>habla con tu agente"] --> GR["2. Grade<br/>métricas de los traces<br/>+ jueces LLM"]
+        GR --> A["3. Analyze<br/>Gemini encuentra<br/>la causa raíz"]
+        A --> R["4. Report<br/>reporte HTML<br/>+ historial"]
     end
     R --> H["Tú: hipótesis, un cambio, commit"]
     H -->|vuelve a correr| G

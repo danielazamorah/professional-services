@@ -47,13 +47,14 @@ score. But the agent gives refunds that the store policy does not allow. You wil
 One command, `agent-eval run`, runs four phases. Then you change one thing and run it again.
 
 ```mermaid
-flowchart LR
+flowchart TB
     D["dataset.jsonl<br/>5 test conversations"] --> G
     M["metric_definitions.json<br/>what to measure"] --> GR
     subgraph RUN["agent-eval run"]
-        G["1. Generate<br/>a simulated customer talks to your agent"] --> GR["2. Grade<br/>metrics from traces + LLM judges"]
-        GR --> A["3. Analyze<br/>Gemini finds the root cause"]
-        A --> R["4. Report<br/>HTML report + run history"]
+        direction LR
+        G["1. Generate<br/>a simulated customer<br/>talks to your agent"] --> GR["2. Grade<br/>metrics from traces<br/>+ LLM judges"]
+        GR --> A["3. Analyze<br/>Gemini finds<br/>the root cause"]
+        A --> R["4. Report<br/>HTML report<br/>+ run history"]
     end
     R --> H["You: hypothesis, one change, commit"]
     H -->|run again| G
