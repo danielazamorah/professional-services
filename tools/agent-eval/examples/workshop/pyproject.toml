@@ -8,8 +8,8 @@ dependencies = [
     "google-adk>=2.0.0",
     # agent-eval lives in the tools/agent-eval folder of
     # GoogleCloudPlatform/professional-services. This pin is the version that
-    # the workshop was tested with (agent-eval v0.2.0).
-    "agent-eval @ git+https://github.com/GoogleCloudPlatform/professional-services.git@d282bc6f0712fbc6420127a75a2943b748030739#subdirectory=tools/agent-eval",
+    # the workshop was tested with (agent-eval v0.2.0, latest on main).
+    "agent-eval @ git+https://github.com/GoogleCloudPlatform/professional-services.git@be41f135aa8cb5d432cd70ba1c52a6bad10d187c#subdirectory=tools/agent-eval",
 ]
 
 [build-system]
