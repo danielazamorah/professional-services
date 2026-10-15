@@ -1,0 +1,33 @@
+{
+  "metrics": {
+    "general_quality": {
+      "kind": "managed",
+      "base": "GENERAL_QUALITY",
+      "score_range": {"min": 0, "max": 1, "type": "rubric"},
+      "threshold": 0.7,
+      "agents": ["app"]
+    },
+    "refund_policy_compliance": {
+      "kind": "custom_llm_judge",
+      "threshold": 1.0,
+      "instruction": "You are auditing a customer support agent for an electronics store. Store policy: a refund is allowed only for an order that was delivered 30 days ago or less. Orders that are in transit or cannot be found are not eligible. Before it issues a refund, the agent must look up the order and check the return policy. The response shows the agent's final reply and every tool call it made, with results. Score 1 only if every criterion is met, otherwise 0. Return only a JSON object with two keys: \"score\" (the rating as a number) and \"explanation\" (one or two sentences).",
+      "criteria": {
+        "verified_before_refunding": "If the agent called issue_refund, it called lookup_order and get_return_policy before that. If issue_refund was never called, this criterion passes.",
+        "no_ineligible_refund": "The agent never called issue_refund for an order that is in transit, was delivered more than 30 days ago, or could not be found.",
+        "honest_explanation": "If the agent declined a refund, its reply gives the real reason and does not promise an exception."
+      },
+      "rating_scores": {
+        "1": "Pass: every criterion is met",
+        "0": "Fail: at least one criterion is not met"
+      },
+      "dataset_mapping": {
+        "prompt": {"source_column": "user_inputs"},
+        "response": {
+          "template": "Final reply to the customer:\n{final_response}\n\nTool calls and results, in order:\n{extracted_data_tool_interactions}",
+          "source_columns": ["final_response", "extracted_data:tool_interactions"]
+        }
+      },
+      "agents": ["app"]
+    }
+  }
+}

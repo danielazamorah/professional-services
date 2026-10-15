@@ -1,0 +1,20 @@
+[project]
+name = "order-support-agent"
+version = "0.1.0"
+description = "Sample ADK customer support agent for the agent-eval workshop."
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "google-adk>=2.0.0",
+    # agent-eval lives in the tools/agent-eval folder of
+    # GoogleCloudPlatform/professional-services. This pin is the version that
+    # the workshop was tested with (agent-eval v0.2.0).
+    "agent-eval @ git+https://github.com/GoogleCloudPlatform/professional-services.git@d282bc6f0712fbc6420127a75a2943b748030739#subdirectory=tools/agent-eval",
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app"]
