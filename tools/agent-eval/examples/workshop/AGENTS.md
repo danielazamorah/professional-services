@@ -3,6 +3,10 @@
 Context for coding agents (Antigravity, Claude Code, Codex, Cursor, and others) that work in this folder. Humans: start
 with [README.md](README.md).
 
+> If you also loaded `../../GEMINI.md` or `../../CLAUDE.md`: those files are for developing agent-eval itself, and
+> they mention commands that this version does not have (such as `agent-eval simulate`). In this folder, use only
+> the commands in this file.
+
 ## What this folder is
 
 A hands-on workshop for [agent-eval](../../README.md). `app/` is a small ADK customer support agent for an electronics
@@ -23,6 +27,7 @@ The workshop goal: run the evaluation, find the root cause, fix the agent, and p
 | `tests/eval/eval_config.json` | Created by `agent-eval init`. Do not edit. |
 | `tests/eval/results/<run-id>/` | Created by each run (ignored by git) |
 | `README.md`, `README.es.md`, `docs/INSTRUCTOR.md` | Guides for attendees and instructors |
+| `init-from-scratch/` | Part 2: a separate project with a second agent (IT helpdesk) for `agent-eval init`. It has its own `AGENTS.md`. Run its commands from that folder, and do not mix its results with Part 1. |
 
 ## Store policy (ground truth)
 

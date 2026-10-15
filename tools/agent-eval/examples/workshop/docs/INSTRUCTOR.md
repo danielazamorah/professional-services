@@ -36,6 +36,11 @@ Notes for running this repository as a live, hands-on workshop (about 60 minutes
 | 0:45 to 0:55 | The fix (one prompt change), second run, comparison, run history | Steps 9 and 10 |
 | 0:55 to 1:00 | Lessons and challenges | Challenges |
 
+**Optional Part 2 (about 25 minutes, needs a coding agent):** generate a suite for a second agent with
+`agent-eval init --ai-metrics` (Step 11), review and run it with the coding agent (Step 12), and, while it runs, make
+a third change to the Part 1 agent in a second session (Step 13). Key message: a generated suite is a strong first
+draft. Review it like code before you trust its scores.
+
 ## What good results look like
 
 | Run | `general_quality` | `refund_policy_compliance` |

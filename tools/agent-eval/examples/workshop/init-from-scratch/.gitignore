@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.egg-info/
+
+# Your project settings (never commit them)
+.env
+
+# Files that ADK and agent-eval generate while they run
+.adk/
+.agent_eval_tmp/
+helpdesk/conversation_scenarios.json
+helpdesk/session_input.json
+helpdesk/eval_config.json
+tests/eval/results/
+tests/eval/.backup/

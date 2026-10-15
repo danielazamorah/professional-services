@@ -1,0 +1,18 @@
+[project]
+name = "helpdesk-agent"
+version = "0.1.0"
+description = "Sample ADK IT helpdesk agent for the agent-eval init exercise."
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "google-adk>=2.0.0",
+]
+
+# This file also tells agent-eval where the project root is: `agent-eval init`
+# writes tests/eval/ next to it, so the main workshop suite is not touched.
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["helpdesk"]
